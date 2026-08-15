@@ -22,7 +22,7 @@ Verify a change with **fmt-check → lint → test**, in that order.
 - Runtime: `tokio`
 - I/O: `tokio-modbus`, `rumqttd`, `rumqttc`
 - Historian: `rusqlite` (bundled)
-- Planned (do not delete as unused): `toml`, `arc-swap`
+- Planned (do not delete as unused): `arc-swap`
 - Errors: `anyhow` + `?` (application crate)
 - Logs: `tracing` / `tracing-subscriber`, never `println!` / `dbg!` on production paths
 
@@ -50,4 +50,4 @@ Keep modules small. Do not invent a workspace, `lib.rs`, or extra crates until t
 - Broker and simulator bind **127.0.0.1** unless the user asks otherwise.
 - Never commit secrets, `.env*`, or `*.db`.
 - Do not rewrite working modules to add traits, builders, or error enums “for later”.
-- SQLite history and FUXA HMI verification are pending; leave the reserved deps in `Cargo.toml`.
+- SQLite history (`src/db.rs`) and FUXA HMI verification (`fuxa-project/README.md`) are done.

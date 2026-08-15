@@ -11,7 +11,6 @@ pub struct Config {
     pub broker: Broker,
     pub modbus: Modbus,
     pub mqtt: Mqtt,
-    pub fuxa: Fuxa,
     pub db: Db,
 }
 
@@ -89,29 +88,6 @@ impl Default for Mqtt {
     }
 }
 
-/// FUXA HMI server (spawned as a Node.js child process).
-#[derive(Debug, Clone, Deserialize)]
-#[serde(default)]
-pub struct Fuxa {
-    pub enabled: bool,
-    pub dir: String,
-    pub host: String,
-    pub port: u16,
-    pub spawn_timeout_ms: u64,
-}
-
-impl Default for Fuxa {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            dir: "fuxa/server".to_string(),
-            host: "127.0.0.1".to_string(),
-            port: 1881,
-            spawn_timeout_ms: 15000,
-        }
-    }
-}
-
 /// SQLite historian path.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(default)]
@@ -136,7 +112,6 @@ mod tests {
         let cfg = Config::default();
         assert_eq!(cfg.broker.port, 1883);
         assert_eq!(cfg.modbus.port, 5020);
-        assert_eq!(cfg.fuxa.port, 1881);
         assert_eq!(cfg.mqtt.topic, "iot/site1/gateway1/data");
     }
 
@@ -150,16 +125,12 @@ mod tests {
             [modbus]
             port = 5502
             interval_ms = 500
-
-            [fuxa]
-            enabled = false
         "#;
         let cfg: Config = toml::from_str(raw).expect("valid toml");
         assert_eq!(cfg.broker.host, "10.0.0.1");
         assert_eq!(cfg.broker.port, 2883);
         assert_eq!(cfg.modbus.port, 5502);
         assert_eq!(cfg.modbus.interval_ms, 500);
-        assert!(!cfg.fuxa.enabled);
         // untouched fields fall back to defaults
         assert_eq!(cfg.db.path, "data/iot_gateway.db");
     }

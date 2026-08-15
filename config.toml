@@ -16,12 +16,5 @@ client_id = "iot-gateway-collector"
 topic = "iot/site1/gateway1/data"
 sub_topic = "iot/#"
 
-[fuxa]
-enabled = true
-dir = "fuxa/server"
-host = "127.0.0.1"
-port = 1881
-spawn_timeout_ms = 15000
-
 [db]
 path = "data/iot_gateway.db"
