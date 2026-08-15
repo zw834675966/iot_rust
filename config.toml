@@ -1,0 +1,27 @@
+# iot_gateway 统一配置文件
+# cargo run 时自动加载；所有 IP/端口在此集中管理
+
+[broker]
+host = "127.0.0.1"
+port = 1883
+
+[modbus]
+host = "127.0.0.1"
+port = 5020
+register = 0
+interval_ms = 2000
+
+[mqtt]
+client_id = "iot-gateway-collector"
+topic = "iot/site1/gateway1/data"
+sub_topic = "iot/#"
+
+[fuxa]
+enabled = true
+dir = "fuxa/server"
+host = "127.0.0.1"
+port = 1881
+spawn_timeout_ms = 15000
+
+[db]
+path = "data/iot_gateway.db"

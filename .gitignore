@@ -1,0 +1,13 @@
+/target
+**/*.rs.bk
+.env
+.env.*
+*.db
+*.sqlite
+/data/
+.idea/
+
+
+# vendored FUXA (node_modules re-installable via npm install)
+fuxa/server/node_modules/
+fuxa/client/node_modules/
