@@ -1,0 +1,86 @@
+name: Production Acceptance
+
+on:
+  push:
+    branches:
+      - main
+      - ci/acceptance-run
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  acceptance:
+    name: Industrial Acceptance Run
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (all targets, warnings denied)
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Unit tests
+        run: cargo test --all-targets
+
+      - name: Release build
+        run: cargo build --release
+
+      - name: Real-run smoke test (Modbus → MQTT → SQLite)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Pre-build so compile output is not interleaved with runtime logs.
+          cargo build
+
+          set +e
+          timeout 12s cargo run > /tmp/iot_gateway.log 2>&1
+          code=$?
+          set -e
+
+          if [ "$code" -ne 124 ]; then
+            echo "::error::gateway did not keep running until timeout; exit=$code"
+            tail -n 200 /tmp/iot_gateway.log || true
+            exit 1
+          fi
+
+          echo "--- gateway log ---"
+          cat /tmp/iot_gateway.log
+
+          for pattern in \
+            "Modbus TCP simulator listening" \
+            "MQTT broker starting" \
+            "SQLite historian ready" \
+            "read register 0" \
+            "FUXA would receive" \
+            '"register1":' \
+            '"quality":"good"'
+          do
+            if ! grep -qF "$pattern" /tmp/iot_gateway.log; then
+              echo "::error::missing expected log pattern: $pattern"
+              exit 1
+            fi
+          done
+
+          # Historian must have persisted at least one row.
+          cargo run --example query_db > /tmp/query_db.log 2>&1
+          cat /tmp/query_db.log
+          if ! grep -Eq "total: [1-9][0-9]*" /tmp/query_db.log; then
+            echo "::error::query_db did not report at least one persisted row"
+            exit 1
+          fi
